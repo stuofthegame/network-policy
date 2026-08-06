@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL:
+    targetRevision: main
+    path: applications/bootstrap
+    helm: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false # don't auto-heal deleted child apps
+    syncOptions:
+      - PrunePropagationPolicy=background # Ensures child apps/resources are deleted in background
+      - ApplyOutOfSyncOnly=true # Optional: only apply resources that are out-of-sync
