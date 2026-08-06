@@ -1,0 +1,55 @@
+applications:
+  - name: secrets-provider-aws
+    namespace: kube-system
+    repoURL: 
+    path: applications/secrets-provider-aws
+    targetRevision: main
+    multiple_sources: false
+  - name: alb-controller
+    namespace: kube-system
+    repoURL: 
+    path: applications/alb-controller
+    targetRevision: main
+    multiple_sources: false
+  - name: ebs-csi-driver
+    namespace: kube-system
+    repoURL:
+    path: applications/ebs-csi-driver
+    targetRevision: main
+    multiple_sources: false
+  - name: cluster-autoscaler
+    namespace: kube-system
+    repoURL: 
+    path: applications/cluster-autoscaler
+    targetRevision: main
+    multiple_sources: false
+  - name: metrics-server
+    namespace: kube-system
+    repoURL: 
+    path: applications/metrics-server
+    targetRevision: main
+    multiple_sources: false
+  - name: keycloak
+    namespace: 
+    repoURL:
+    path: applications/keycloak
+    targetRevision: main
+    multiple_sources: false
+  - name: confluence
+    namespace: confluence
+    repoURL: 
+    path: applications/confluence
+    targetRevision: main
+    multiple_sources: false
+  - name: gitlab
+    namespace: gitlab
+    repoURL: 
+    path: applications/gitlab
+    targetRevision: main
+    multiple_sources: false
+  - name: jira
+    namespace: jira
+    repoURL: 
+    path: applications/jira
+    targetRevision: main
+    multiple_sources: false
