@@ -1,0 +1,54 @@
+name: Mirror to CodeCommit
+on:
+  push:
+    branches:
+      - main
+      - stage
+      - demo
+      - prod
+jobs:
+  prep:
+    name: Mirror repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone source repository
+        run: |
+          HTTP_CLONE_URL=${{ github.server_url }}/${{ github.repository }}.git
+          PARSED_CLONE_URL=$(echo $HTTP_CLONE_URL | sed 's|https://|https://${{ github.actor }}:${{ github.token }}@|')
+          git clone --bare --single-branch --branch ${{ github.ref_name }} $PARSED_CLONE_URL
+      - name: Configure Git with CodeCommit authn/authz
+        run:  |
+          git config --global credential.helper '!aws codecommit credential-helper $@'
+          git config --global credential.UseHttpPath true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ vars.CODECOMMIT_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CODECOMMIT_AWS_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+      - name: Check target CodeCommit repository availability
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d '/' -f 2)
+          CC_REPO_IS_THERE=$(aws codecommit get-repository --repository-name $REPO_NAME | jq -r .repositoryMetadata.cloneUrlHttp)
+          if [[ "$CC_REPO_IS_THERE" == "" ]]; then
+            aws codecommit create-repository \
+              --repository-name $REPO_NAME \
+              --repository-description "Mirror of $REPO_NAME within ${{ github.repository_owner }} organization"
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ vars.CODECOMMIT_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CODECOMMIT_AWS_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+      - name: Create CodeCommit Repository
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d '/' -f 2)
+          CC_REPO=$(aws codecommit get-repository --repository-name $REPO_NAME | jq -r .repositoryMetadata.cloneUrlHttp)
+          cd $REPO_NAME.git
+          git remote add aws-origin $CC_REPO
+          git push -u aws-origin ${{ github.ref_name }}:${{ github.ref_name }}
+          git push --tags -u aws-origin
+        env:
+          AWS_ACCESS_KEY_ID: ${{ vars.CODECOMMIT_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CODECOMMIT_AWS_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
